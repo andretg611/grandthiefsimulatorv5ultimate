@@ -5,8 +5,6 @@ A browser-based **HTML5 + Three.js open-world crime sandbox prototype** inspired
 ## Play on GitHub Pages
 After you push this repository to GitHub, the included workflow auto-deploys the site from the `main` branch.
 
-Your live URL will be:
-
 ```text
 https://<your-github-username>.github.io/grandthiefsimulatorv5ultimate/
 ```
@@ -17,36 +15,30 @@ https://<your-github-username>.github.io/grandthiefsimulatorv5ultimate/
 3. Ensure **Source** is set to **GitHub Actions**.
 4. Push to `main` (or run the workflow manually under **Actions**).
 
-## Features
-- 3D city grid with roads, buildings, trees, and fog distance.
-- On-foot character movement with sprinting.
-- Enter/exit vehicles and drive with arcade handling.
-- Ambient AI traffic cars roaming the map.
-- Wanted level system and “chaos action” to escalate police heat.
-- Minimap + HUD (mode, speed, stars, cash).
-- Third-person and cinematic camera toggle.
+## Prototype upgrades in this version
+- Pointer lock mouse-look start screen.
+- Better lighting/material polish + gradient sky shader.
+- Improved vehicle handling with proper idle, reverse, drag, steering behavior.
+- Armed on-foot combat loop (shooting, ammo, reload behavior).
+- Traffic awareness (cars stop for player in front), plus multi-car collision response.
+- Active police spawning and pursuit behavior tied to wanted level.
 
 ## Controls
 - `WASD`: move / drive
-- `Shift`: sprint
-- `Space`: handbrake
-- `E`: enter/exit nearby vehicle
-- `F`: chaos action (+cash, +wanted)
+- `Shift`: sprint (on foot)
+- `E`: enter / exit nearby vehicle
+- `Mouse`: look (while pointer-locked)
+- `Left Click`: fire weapon (on foot)
+- `R`: reload
+- `Space`: handbrake (driving)
 - `C`: cinematic camera
-- Hold mouse button + move mouse: look around
+- `F`: provoke / increase wanted level
 
 ## Run locally
-Because this project uses ES modules, run from a local server:
-
 ```bash
 python3 -m http.server 4173
 ```
-
-Then open:
-
-```text
-http://localhost:4173
-```
+Then open `http://localhost:4173`.
 
 ## Notes
 This is an original prototype and **not an official GTA product**.
