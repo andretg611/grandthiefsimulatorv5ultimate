@@ -238,6 +238,20 @@
     const playerCar = makeCar(0xff5332, false);
     playerCar.position.set(6, 0, -8);
 
+    function nearestLaneInfo(pos) {
+      let best = { axis: 'z', line: 0, dist: Infinity };
+      for (const line of roadLines) {
+        for (const off of laneOffsets) {
+          const lx = line + off;
+          const dz = Math.abs(pos.z - lx);
+          if (dz < best.dist) best = { axis: 'x', line: lx, dist: dz };
+          const dx = Math.abs(pos.x - lx);
+          if (dx < best.dist) best = { axis: 'z', line: lx, dist: dx };
+        }
+      }
+      return best;
+    }
+
     function assignLane(car, axis = Math.random() < .5 ? 'x' : 'z') {
       const line = roadLines[Math.floor(Math.random() * roadLines.length)] + (Math.random() < .5 ? -4 : 4);
       car.userData.laneAxis = axis;
@@ -280,8 +294,13 @@
         const dist = 90 + Math.random() * 55;
         c.position.set(t.x + Math.sin(angle) * dist, 0, t.z + Math.cos(angle) * dist);
         c.position.copy(nearestRoadAlignedPosition(c.position));
-        assignLane(c, Math.random() < .5 ? 'x' : 'z');
-        c.position.copy(nearestRoadAlignedPosition(c.position));
+        const lane = nearestLaneInfo(c.position);
+        c.userData.laneAxis = lane.axis;
+        c.userData.laneLine = lane.line;
+        c.userData.laneDir = Math.random() < .5 ? 1 : -1;
+        c.rotation.y = lane.axis === 'x'
+          ? (c.userData.laneDir > 0 ? 0 : Math.PI)
+          : (c.userData.laneDir > 0 ? Math.PI / 2 : -Math.PI / 2);
         policeCars.push(c);
       }
       toast('Dispatch: units en route.');
@@ -427,15 +446,20 @@
       const f = new THREE.Vector3(Math.sin(car.rotation.y), 0, Math.cos(car.rotation.y));
       const next = car.position.clone().addScaledVector(f, ud.speed * dt);
 
-      if (!chaseTarget) {
-        if (axis === 'x') next.x = lane;
-        else next.z = lane;
-      }
+      if (axis === 'x') next.x = THREE.MathUtils.lerp(next.x, lane, chaseTarget ? 0.08 : 1);
+      else next.z = THREE.MathUtils.lerp(next.z, lane, chaseTarget ? 0.08 : 1);
 
       if (Math.abs(next.x) > worldBounds || Math.abs(next.z) > worldBounds || hitsBuilding(next.x, next.z, 1.4)) {
         ud.laneDir *= -1;
       } else {
         car.position.copy(next);
+      }
+
+      const nearIntersection = Math.abs(Math.abs(car.position.x) % laneStep) < 1.5 && Math.abs(Math.abs(car.position.z) % laneStep) < 1.5;
+      if (!chaseTarget && nearIntersection && Math.random() < 0.006) {
+        ud.laneAxis = ud.laneAxis === 'x' ? 'z' : 'x';
+        ud.laneLine = nearestRoadAlignedPosition(car.position)[ud.laneAxis === 'x' ? 'x' : 'z'];
+        ud.laneDir = Math.random() < .5 ? 1 : -1;
       }
     }
 
@@ -485,6 +509,14 @@
           player.wanted = Math.min(5, player.wanted + 0.04);
         }
       });
+
+      for (let i = policeOnFoot.length - 1; i >= 0; i--) {
+        const cop = policeOnFoot[i];
+        if (cop.position.distanceTo(target) > 220) {
+          scene.remove(cop);
+          policeOnFoot.splice(i, 1);
+        }
+      }
     }
 
     function resolveCarCollisions() {
